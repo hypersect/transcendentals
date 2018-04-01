@@ -1,4 +1,5 @@
   Copyright (c) 2018 Hypersect
+  
   http://www.hypersect.com/
 
   This software is provided 'as-is', without any express or implied
