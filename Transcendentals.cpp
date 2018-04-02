@@ -118,18 +118,21 @@ inline uint64_t Log2( uint64_t val )
 //******************************************************************************
 
 // Compute Log2 for inputs greater than 0.5 to 4.14 digits accuracy
+// Performs range reduction to get arg into [0.5,1.0] by using following 
+// identities where n is an integer that puts f in [0.5,1.0]
+// log2(x) = log2(f * 2^n)
+//         = log2(f) + log2(2^n)
+//         = log2(f) + n
 // based on http://www.ganssle.com/approx-2.htm
 static inline float LogBase2_4_14(float arg)
 {
-	// perform range reduction to get arg into [0.5,1.0] by using following 
-	// identities where n is an integer that puts f in [0.5,1.0]
-	// log2(x) = log2(f * 2^n)
-	//         = log2(f) + log2(2^n)
-	//         = log2(f) + n
-	if (arg >= 18446744073709551616.0f)
+	// To prevent overflow, the input needs to be less than 2^63 for the integer cast
+	// followed by a potential left shift.
+	const float twoPowSixtyThree = 9223372036854775808.0f;
+	if (arg >= twoPowSixtyThree)
 	{
-		// Input will overflow a 64 bit integer. Add log2(2^64) and recurse.
-		return 64.0f + LogBase2_4_14(arg/18446744073709551616.0f);
+		// Factor out log2(2^32) and recurse.
+		return 63.0f + LogBase2_4_14(arg/twoPowSixtyThree);
 	}
 
 	uint64_t intArg = (uint64_t)arg;
@@ -163,15 +166,13 @@ static inline float LogBase2_4_14(float arg)
 
 static inline double LogBase2_4_14(double arg)
 {
-	// perform range reduction to get arg into [0.5,1.0] by using following 
-	// identities where n is an integer that puts f in [0.5,1.0]
-	// log2(x) = log2(f * 2^n)
-	//         = log2(f) + log2(2^n)
-	//         = log2(f) + n
-	if (arg >= 18446744073709551616.0)
+	// To prevent overflow, the input needs to be less than 2^63 for the integer cast
+	// followed by a potential left shift.
+	const float twoPowSixtyThree = 9223372036854775808.0;
+	if (arg >= twoPowSixtyThree)
 	{
-		// Input will overflow a 64 bit integer. Add log2(2^64) and recurse.
-		return 64.0 + LogBase2_4_14(arg/18446744073709551616.0);
+		// Factor out log2(2^32) and recurse.
+		return 63.0 + LogBase2_4_14(arg/twoPowSixtyThree);
 	}
 	
 	uint64_t intArg = (uint64_t)arg;
