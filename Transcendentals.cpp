@@ -121,11 +121,17 @@ inline uint64_t Log2( uint64_t val )
 // based on http://www.ganssle.com/approx-2.htm
 static inline float LogBase2_4_14(float arg)
 {
-	// perform renge reduction to get arg into [0.5,1.0] by using following 
+	// perform range reduction to get arg into [0.5,1.0] by using following 
 	// identities where n is an integer that puts f in [0.5,1.0]
 	// log2(x) = log2(f * 2^n)
-    //         = log2(f) + log2(2^n)
-    //         = log2(f) + n
+	//         = log2(f) + log2(2^n)
+	//         = log2(f) + n
+	if (arg >= 18446744073709551616.0f)
+	{
+		// Input will overflow a 64 bit integer. Add log2(2^64) and recurse.
+		return 64.0f + LogBase2_4_14(arg/18446744073709551616.0f);
+	}
+
 	uint64_t intArg = (uint64_t)arg;
 
 	// compute integer power of 2 that is greater than or equal to the input argument
@@ -157,11 +163,17 @@ static inline float LogBase2_4_14(float arg)
 
 static inline double LogBase2_4_14(double arg)
 {
-	// perform renge reduction to get arg into [0.5,1.0] by using following 
+	// perform range reduction to get arg into [0.5,1.0] by using following 
 	// identities where n is an integer that puts f in [0.5,1.0]
 	// log2(x) = log2(f * 2^n)
-    //         = log2(f) + log2(2^n)
-    //         = log2(f) + n
+	//         = log2(f) + log2(2^n)
+	//         = log2(f) + n
+	if (arg >= 18446744073709551616.0)
+	{
+		// Input will overflow a 64 bit integer. Add log2(2^64) and recurse.
+		return 64.0 + LogBase2_4_14(arg/18446744073709551616.0);
+	}
+	
 	uint64_t intArg = (uint64_t)arg;
 
 	// compute integer power of 2 that is greater than or equal to the input argument
