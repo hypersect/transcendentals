@@ -25,7 +25,7 @@
 ******************************************************************************/
 
 
-#include "Trancendentals.h"
+#include "Transcendentals.h"
 #include <math.h>
 #include <assert.h>
 
@@ -135,33 +135,36 @@ static inline float LogBase2_4_14(float arg)
 		return 63.0f + LogBase2_4_14(arg/twoPowSixtyThree);
 	}
 
-	uint64_t intArg = (uint64_t)arg;
+	uint64_t argFloor = (uint64_t)arg;
 
 	// compute integer power of 2 that is greater than or equal to the input argument
-	uint64_t logInt    = Log2(intArg); // logInt    = log2(intArg)
-	uint64_t expLogInt = 1ull << logInt;   // expLogInt = 2^logInt
-	if (intArg > expLogInt)                // increase power if not bounded
+	uint64_t logInt    = Log2(argFloor);          // logInt    = log2(argFloor)
+	float    expLogInt = (float)(1ull << logInt); // expLogInt = 2^logInt
+	if (arg > expLogInt)                          // increase power if not bounded
 	{	
-		RJ_ASSERT(expLogInt << 1ull >= intArg);
 		logInt += 1ull;
-		expLogInt <<= 1ull;
+		expLogInt *= 2.0f;
+		RJ_ASSERT(arg <= expLogInt);
 	}
-
-	float n = (float)logInt;
 
 	// remove the 2^n scale to get arg into [0.5, 1]
 	arg = arg / (float)expLogInt;
 	
 	// The format of the polynomial is P(x)/Q(x)
-	const float P00 = -1.45326486f;
-	const float P01 =  0.951366714f;
-	const float P02 =  0.501994886f;
-	const float Q00 =  0.352143751f; 
+	// note: polynomial evaluation will not perfectly map 1 to 0, so we explicitly test the boundary
+	float poly = 0.0f;
+	if (arg < 1.0f)
+	{
+		const float P00 = -1.45326486f;
+		const float P01 =  0.951366714f;
+		const float P02 =  0.501994886f;
+		const float Q00 =  0.352143751f; 
 	
-	float poly= (P00 + arg * (P01 + arg*P02)) / (Q00 + arg);
+		poly= (P00 + arg * (P01 + arg*P02)) / (Q00 + arg);
+	}
 
 	// merge the fractional and integral logarithms back together
-	return poly + n;
+	return poly + (float)logInt;
 }
 
 static inline double LogBase2_4_14(double arg)
@@ -174,34 +177,37 @@ static inline double LogBase2_4_14(double arg)
 		// Factor out log2(2^32) and recurse.
 		return 63.0 + LogBase2_4_14(arg/twoPowSixtyThree);
 	}
-	
-	uint64_t intArg = (uint64_t)arg;
+
+	uint64_t argFloor = (uint64_t)arg;
 
 	// compute integer power of 2 that is greater than or equal to the input argument
-	uint64_t logInt    = Log2(intArg); // logInt    = log2(intArg)
-	uint64_t expLogInt = 1ull << logInt;   // expLogInt = 2^logInt
-	if (intArg < expLogInt)               // increase power if not bounded
+	uint64_t logInt    = Log2(argFloor);           // logInt    = log2(argFloor)
+	double   expLogInt = (double)(1ull << logInt); // expLogInt = 2^logInt
+	if (arg > expLogInt)                           // increase power if not bounded
 	{	
-		RJ_ASSERT(expLogInt << 1ull >= intArg);
 		logInt += 1ull;
-		expLogInt <<= 1ull;
+		expLogInt *= 2.0;
+		RJ_ASSERT(arg <= expLogInt);
 	}
-
-	double n = (double)logInt;
 
 	// remove the 2^n scale to get arg into [0.5, 1]
 	arg = arg / (double)expLogInt;
 	
 	// The format of the polynomial is P(x)/Q(x)
-	const double P00 = -1.45326486;
-	const double P01 =  0.951366714;
-	const double P02 =  0.501994886;
-	const double Q00 =  0.352143751; 
+	// note: polynomial evaluation will not perfectly map 1 to 0, so we explicitly test the boundary
+	double poly = 0.0;
+	if (arg < 1.0)
+	{
+		const double P00 = -1.45326486;
+		const double P01 =  0.951366714;
+		const double P02 =  0.501994886;
+		const double Q00 =  0.352143751; 
 	
-	double poly= (P00 + arg * (P01 + arg*P02)) / (Q00 + arg);
+		poly= (P00 + arg * (P01 + arg*P02)) / (Q00 + arg);
+	}
 
 	// merge the fractional and integral logarithms back together
-	return poly + n;
+	return poly + (double)logInt;
 }
 
 float Log2(float value)
@@ -290,6 +296,12 @@ static inline float ExpBase2_Positive(float exponent)
 	const float q0 = 25.0391066503f;
 	const float p1 = 8.6778388279f;
 
+	// check for overflow in a float
+	if (exponent >= 128.0f)
+	{
+		return HUGE_VALF;
+	}
+
 	// Split into integer and fractional part such that we can compute separately
 	// and later recombine using 2^x = 2^ipart * 2^fpart
 	uint32_t ipart = (uint32_t)(exponent);
@@ -317,18 +329,11 @@ static inline float ExpBase2_Positive(float exponent)
 	// 1 sign bit:        0
 	// 8 exponent bits:  exponent+127 
 	// 23 mantissa bits: 0
-	if (ipart > 1023)
-	{
-		return HUGE_VALF;
-	}
-	else
-	{
-		union { double f; uint64_t i; } expIpart;
-		expIpart.i = ((ipart+1023ull) << 52ull);
+	union { float f; uint32_t i; } expIpart;
+	expIpart.i = ((ipart+127) << 23);
 
-		// Recombine integer and fractional parts for result
-		return (float)(expIpart.f * expFpart);
-	}
+	// Recombine integer and fractional parts for result
+	return expIpart.f * expFpart;
 }
 
 static inline double ExpBase2_Positive(double exponent)
@@ -338,9 +343,15 @@ static inline double ExpBase2_Positive(double exponent)
 	const double q0 = 25.0391066503f;
 	const double p1 = 8.6778388279f;
 
+	// check for overflow in a double
+	if (exponent >= 1024.0f)
+	{
+		return HUGE_VAL;
+	}
+
 	// Split into integer and fractional part such that we can compute separately
 	// and later recombine using 2^x = 2^ipart * 2^fpart
-	uint64_t ipart = (uint64_t)(exponent);
+	uint32_t ipart = (uint32_t)(exponent);
 	double   fpart = exponent - ipart;
 
 	double expFpart;
@@ -365,18 +376,11 @@ static inline double ExpBase2_Positive(double exponent)
 	// 1 sign bit:       0
 	// 11 exponent bits: exponent+1023 
 	// 52 mantissa bits: 0
-	if (ipart > 1023)
-	{
-		return HUGE_VAL;
-	}
-	else
-	{
-		union { double f; uint64_t i; } expIpart;
-		expIpart.i = ((ipart+1023ull) << 52ull);
+	union { double f; uint64_t i; } expIpart;
+	expIpart.i = ((ipart+1023ull) << 52ull);
 
-		// Recombine integer and fractional parts for result
-		return expIpart.f * expFpart;
-	}
+	// Recombine integer and fractional parts for result
+	return expIpart.f * expFpart;
 }
 
 float Exp2(float exponent)
