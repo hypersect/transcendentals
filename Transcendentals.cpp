@@ -444,6 +444,8 @@ float Pow(float base, float exponent)
 	//       For example: negative exponents, zeros and infinities.
 	if (base == 0.0f)
 		return 0.0f;
+	else if (exponent == 1.0f)
+		return base;
 
 	return Exp2(Log2(base)*exponent);
 }
@@ -456,6 +458,8 @@ double Pow(double base, double exponent)
 	//       For example: negative exponents, zeros and infinities.
 	if (base == 0.0)
 		return 0.0;
+	else if (exponent == 1.0)
+		return base;
 
 	return Exp2(Log2(base)*exponent); 
 }
