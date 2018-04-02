@@ -44,14 +44,16 @@ const float c_SqrtTwo = 1.4142135623730950488016887242097f;
 // Wrapper functions that depend on math.h
 // Note: CRT implementations should produce equivalent results across platforms
 //******************************************************************************
-static inline float  Sqrt(float val)   { return ::sqrtf(val); }
-static inline double Sqrt(double val)  { return ::sqrt(val); }
-static inline float  Abs(float val)    { return ::fabsf(val); }
-static inline double Abs(double val)   { return ::fabs(val); }
-static inline float  Ceil(float val)   { return ::ceilf(val); }
-static inline double Ceil(double val)  { return ::ceil(val); }
-static inline float  Floor(float val)  { return ::floorf(val); }
-static inline double Floor(double val) { return ::floor(val); }
+static inline float  IsInfinity(float val)  { return ::isinf(val); }
+static inline double IsInfinity(double val) { return ::isinf(val); }
+static inline float  Sqrt(float val)        { return ::sqrtf(val); }
+static inline double Sqrt(double val)       { return ::sqrt(val); }
+static inline float  Abs(float val)         { return ::fabsf(val); }
+static inline double Abs(double val)        { return ::fabs(val); }
+static inline float  Ceil(float val)        { return ::ceilf(val); }
+static inline double Ceil(double val)       { return ::ceil(val); }
+static inline float  Floor(float val)       { return ::floorf(val); }
+static inline double Floor(double val)      { return ::floor(val); }
 
 //******************************************************************************
 // Get the log base 2 of a 32-bit unsigned integer.
@@ -368,10 +370,18 @@ float Exp2(float exponent)
 {
 	if (exponent > 0.0f)
 	{
+		// check for positive infinity
+		if (IsInfinity(exponent))
+			return exponent;
+
 		return ExpBase2_Positive(exponent);
 	}
 	else
 	{
+		// check for negative infinity
+		if (IsInfinity(exponent))
+			return 0.0f;
+
 		// 2^-x = 1 / 2^x
 		return 1.0f / ExpBase2_Positive(-exponent);
 	}	
@@ -381,10 +391,18 @@ double Exp2(double exponent)
 {
 	if (exponent > 0.0)
 	{
+		// check for positive infinity
+		if (IsInfinity(exponent))
+			return exponent;
+
 		return ExpBase2_Positive(exponent);
 	}
 	else
 	{
+		// check for negative infinity
+		if (IsInfinity(exponent))
+			return 0.0;
+
 		// 2^-x = 1 / 2^x
 		return 1.0 / ExpBase2_Positive(-exponent);
 	}	
