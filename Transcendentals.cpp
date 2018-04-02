@@ -302,12 +302,18 @@ static inline float ExpBase2_Positive(float exponent)
 	// 1 sign bit:        0
 	// 8 exponent bits:  exponent+127 
 	// 23 mantissa bits: 0
-	union { double f; uint64_t i; } expIpart;
-	RJ_ASSERT(ipart <= 1023);
-	expIpart.i = ((ipart+1023ull) << 52ull);
+	if (ipart > 1023)
+	{
+		return HUGE_VALF;
+	}
+	else
+	{
+		union { double f; uint64_t i; } expIpart;
+		expIpart.i = ((ipart+1023ull) << 52ull);
 
-	// Recombine integer and fractional parts for result
-	return (float)(expIpart.f * expFpart);
+		// Recombine integer and fractional parts for result
+		return (float)(expIpart.f * expFpart);
+	}
 }
 
 static inline double ExpBase2_Positive(double exponent)
@@ -344,12 +350,18 @@ static inline double ExpBase2_Positive(double exponent)
 	// 1 sign bit:       0
 	// 11 exponent bits: exponent+1023 
 	// 52 mantissa bits: 0
-	union { double f; uint64_t i; } expIpart;
-	RJ_ASSERT(ipart <= 1023);
-	expIpart.i = ((ipart+1023ull) << 52ull);
+	if (ipart > 1023)
+	{
+		return HUGE_VAL;
+	}
+	else
+	{
+		union { double f; uint64_t i; } expIpart;
+		expIpart.i = ((ipart+1023ull) << 52ull);
 
-	// Recombine integer and fractional parts for result
-	return expIpart.f * expFpart;
+		// Recombine integer and fractional parts for result
+		return expIpart.f * expFpart;
+	}
 }
 
 float Exp2(float exponent)
