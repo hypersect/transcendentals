@@ -872,11 +872,11 @@ double Atan2(double y, double x)
     {
         if (y > 0.0) // x = 0, y > 0
         {
-            return c_TwoPi;
+            return c_HalfPi;
         }
         else if (y < 0.0f) // x = 0, y < 0
         {
-            return -c_TwoPi;
+            return -c_HalfPi;
         }
 		else
 		{
