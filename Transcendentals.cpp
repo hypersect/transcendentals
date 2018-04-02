@@ -571,11 +571,21 @@ double Tan(double val)
 //******************************************************************************
 float Asin(float val)
 {
-	return Atan( val / Sqrt(1.0f - val*val) );
+	if (val >= 1.0f)
+		return c_HalfPi;
+	else if (val <= -1.0f)
+		return -c_HalfPi;
+	else
+		return Atan( val / Sqrt(1.0f - val*val) );
 }
 double Asin(double val)
 { 
-	return Atan( val / Sqrt(1.0 - val*val) );
+	if (val >= 1.0)
+		return c_HalfPi;
+	else if (val <= -1.0)
+		return -c_HalfPi;
+	else
+		return Atan( val / Sqrt(1.0 - val*val) );
 }
 
 //******************************************************************************
@@ -585,13 +595,12 @@ double Asin(double val)
 //******************************************************************************
 float Acos(float val)
 {
-	return c_HalfPi - Atan( val / Sqrt(1.0f - val*val) );
+	return c_HalfPi - Asin(val);
 }
 double Acos(double val)
 {
-	return c_HalfPi - Atan( val / Sqrt(1.0 - val*val) );
+	return c_HalfPi - Asin(val);
 }
-
 
 //******************************************************************************
 // Atan
