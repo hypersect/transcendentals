@@ -126,13 +126,14 @@ inline uint64_t Log2( uint64_t val )
 // based on http://www.ganssle.com/approx-2.htm
 static inline float LogBase2_4_14(float arg)
 {
-	// To prevent overflow, the input needs to be less than 2^63 for the integer cast
-	// followed by a potential left shift.
-	const float twoPowSixtyThree = 9223372036854775808.0f;
-	if (arg >= twoPowSixtyThree)
+	// To prevent overflow, the input needs to be less than 2^64 for the integer cast
+	float result = 0.0f;
+	const float twoPowSixtyFour = 18446744073709551616.0f;
+	while (arg >= twoPowSixtyFour)
 	{
-		// Factor out log2(2^32) and recurse.
-		return 63.0f + LogBase2_4_14(arg/twoPowSixtyThree);
+		// Factor out log2(2^64)
+		result += 64.0f;
+		arg /= twoPowSixtyFour;
 	}
 
 	uint64_t argFloor = (uint64_t)arg;
@@ -164,18 +165,20 @@ static inline float LogBase2_4_14(float arg)
 	}
 
 	// merge the fractional and integral logarithms back together
-	return poly + (float)logInt;
+	result += poly + (float)logInt;
+	return result;
 }
 
 static inline double LogBase2_4_14(double arg)
 {
-	// To prevent overflow, the input needs to be less than 2^63 for the integer cast
-	// followed by a potential left shift.
-	const float twoPowSixtyThree = 9223372036854775808.0;
-	if (arg >= twoPowSixtyThree)
+	// To prevent overflow, the input needs to be less than 2^64 for the integer cast
+	double result = 0.0;
+	const double twoPowSixtyFour = 18446744073709551616.0;
+	while (arg >= twoPowSixtyFour)
 	{
-		// Factor out log2(2^32) and recurse.
-		return 63.0 + LogBase2_4_14(arg/twoPowSixtyThree);
+		// Factor out log2(2^64)
+		result += 64.0;
+		arg /= twoPowSixtyFour;
 	}
 
 	uint64_t argFloor = (uint64_t)arg;
@@ -207,7 +210,8 @@ static inline double LogBase2_4_14(double arg)
 	}
 
 	// merge the fractional and integral logarithms back together
-	return poly + (double)logInt;
+	result += poly + (double)logInt;
+	return result;
 }
 
 float Log2(float value)
